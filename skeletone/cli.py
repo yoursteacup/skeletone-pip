@@ -99,6 +99,7 @@ def patch_alembic_settings(env_path):
         '   f"postgresql+psycopg2://{db_settings.username}:{db_settings.password}"\n',
         '   f"@{db_settings.host}:{db_settings.port}/{db_settings.database}"\n',
         ")\n",
+        'config.set_main_option("sqlalchemy.url", DATABASE_URL)'
     ]
 
     for i, new_import in enumerate(new_settings):
