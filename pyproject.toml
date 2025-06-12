@@ -4,15 +4,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skeletone"
-version = "0.1.9"
+version = "0.1.10"
 description = "CLI for services template for Python (FastAPI, SQLAlchemy, Alembic)"
 readme = "README.md"
+readme-content-type = "text/markdown"
+license = {text = "MIT"}
+authors = [
+    {name = "Zhaxybayev Daulet", email = "damelimm@gmail.com"}
+]
 dependencies = [
     "click",
     "GitPython",
     "rich",
     "requests"
 ]
+
+[project-urls]
+Homepage = "https://github.com/yoursteacup/skeletone-pip"
 
 [project.scripts]
 skeletone = "skeletone.cli:main"
