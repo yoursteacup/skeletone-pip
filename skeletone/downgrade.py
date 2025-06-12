@@ -94,7 +94,8 @@ def download_and_apply_reverse_patch(patch_name):
         f.write(r.content)
 
     # Применяем патч в обратном порядке (-R или --reverse)
-    result = subprocess.run(["git", "apply", "--reverse", patch_file])
+    result = subprocess.run(["git", "apply", "--whitespace=nowarn", "--reverse", patch_file],
+                            capture_output=True, text=True)
     os.remove(patch_file)
 
     if result.returncode != 0:

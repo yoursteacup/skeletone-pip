@@ -46,7 +46,8 @@ def download_and_apply_patch(patch_name):
         raise Exception(f"Can't download patch {patch_name}")
     with open("tmp_skeletone_upgrade.patch", "wb") as f:
         f.write(r.content)
-    result = subprocess.run(["git", "apply", "tmp_skeletone_upgrade.patch"])
+    result = subprocess.run(["git", "apply", "--whitespace=nowarn", "tmp_skeletone_upgrade.patch"],
+                            capture_output=True, text=True)
     os.remove("tmp_skeletone_upgrade.patch")
     if result.returncode != 0:
         raise Exception(f"❌ Patch conflict {patch_name}!")

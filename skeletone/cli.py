@@ -1,15 +1,19 @@
 import click
-from rich.console import Console
 
 from skeletone.downgrade import downgrade_skeletone
+from skeletone.help import show_help
 from skeletone.init import init_skeletone
 from skeletone.upgrade import upgrade_skeletone
-
-console = Console()
+from skeletone.versions import list_versions
 
 @click.group()
 def main():
     pass
+
+@main.command()
+def help():
+    """Show detailed help and usage examples."""
+    show_help()
 
 @main.command()
 def init():
@@ -28,3 +32,8 @@ def upgrade():
 def downgrade(version):
     """Downgrade your project to a specific skeletone template version."""
     downgrade_skeletone(target_version=version)
+
+@main.command()
+def versions():
+    """List all available template versions."""
+    list_versions()
