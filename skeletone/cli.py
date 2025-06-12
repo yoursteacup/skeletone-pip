@@ -27,4 +27,4 @@ def upgrade():
 @click.option("-v", "--version", help="Target tag to downgrade to")
 def downgrade(version):
     """Downgrade your project to a specific skeletone template version."""
-    downgrade_skeletone(version=version)
+    downgrade_skeletone(target_version=version)
