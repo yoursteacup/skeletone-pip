@@ -17,7 +17,7 @@ def get_all_patch_names():
     api_url = "https://api.github.com/repos/yoursteacup/skeletone/contents/patches"
     r = requests.get(api_url)
     if r.status_code != 200:
-        raise Exception(f"Can't get patches list: {r.text}")
+        raise Exception(f"Could not fetch patches list: {r.text}")
     files = r.json()
     patch_names = [f["name"] for f in files if f["name"].endswith(".patch")]
     return sorted(patch_names)
