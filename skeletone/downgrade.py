@@ -16,12 +16,12 @@ PATCHES_BASE_URL = "https://raw.githubusercontent.com/yoursteacup/skeletone/main
 
 def get_available_versions():
     """
-    Получаем список всех доступных версий (тегов) из репозитория
+    Fetching list of available versions (tags) from git
     """
     api_url = "https://api.github.com/repos/yoursteacup/skeletone/tags"
     r = requests.get(api_url)
     if r.status_code != 200:
-        raise Exception(f"Не удается получить список версий: {r.text}")
+        raise Exception(f"Could not fetch versions: {r.text}")
 
     tags = r.json()
     versions = [tag["name"] for tag in tags]
@@ -30,11 +30,11 @@ def get_available_versions():
 
 def get_current_version():
     """
-    Получаем текущую версию из skeletone.lock
+    Getting current version from skeletone.lock
     """
     lock_file = os.path.join(PROJECT_PATH, "skeletone.lock")
     if not os.path.exists(lock_file):
-        raise Exception("Файл skeletone.lock не найден. Проект не инициализирован через skeletone.")
+        raise Exception("File skeletone.lock not found. Project wasn't initialized with skeletone.")
 
     with open(lock_file) as f:
         lock = json.load(f)
@@ -43,12 +43,12 @@ def get_current_version():
 
 def get_all_patch_names():
     """
-    Получаем список всех патчей из репозитория
+    Fetching patches names from git
     """
     api_url = "https://api.github.com/repos/yoursteacup/skeletone/contents/patches"
     r = requests.get(api_url)
     if r.status_code != 200:
-        raise Exception(f"Не удается получить список патчей: {r.text}")
+        raise Exception(f"Could not fetch patches list: {r.text}")
     files = r.json()
     patch_names = [f["name"] for f in files if f["name"].endswith(".patch")]
     return sorted(patch_names)
@@ -56,14 +56,13 @@ def get_all_patch_names():
 
 def build_downgrade_patch_chain(current_ver, target_ver, patch_names):
     """
-    Строим цепочку патчей для отката от current_ver к target_ver
+    Building chain of patches to downgrade from current_ver to target_ver
     """
     chain = []
     cur_ver = current_ver
 
     while cur_ver != target_ver:
         found = False
-        # Ищем патч, который приводит к текущей версии
         for fname in patch_names:
             m = re.match(rf"(v[\d\.]+)_to_{re.escape(cur_ver)}\.patch$", fname)
             if m:
@@ -74,67 +73,63 @@ def build_downgrade_patch_chain(current_ver, target_ver, patch_names):
                 break
 
         if not found:
-            raise Exception(f"Не найден путь отката от {current_ver} к {target_ver}")
+            raise Exception(f"Downgrade chain from {current_ver} to {target_ver} was not found")
 
     return chain
 
 
 def download_and_apply_reverse_patch(patch_name):
     """
-    Скачиваем и применяем патч в обратном порядке
+    Downloading and applying reverse patches
     """
     url = PATCHES_BASE_URL + patch_name
-    console.print(f"[bold green]⬇ Скачивание патча: {patch_name}[/bold green]")
+    console.print(f"[bold green]⬇ Downloading patch: {patch_name}[/bold green]")
     r = requests.get(url)
     if r.status_code != 200:
-        raise Exception(f"Не удается скачать патч {patch_name}")
+        raise Exception(f"Could not download patch {patch_name}")
 
     patch_file = "tmp_skeletone_downgrade.patch"
     with open(patch_file, "wb") as f:
         f.write(r.content)
 
-    # Применяем патч в обратном порядке (-R или --reverse)
     result = subprocess.run(["git", "apply", "--whitespace=nowarn", "--reverse", patch_file],
                             capture_output=True, text=True)
     os.remove(patch_file)
 
     if result.returncode != 0:
-        raise Exception(f"❌ Конфликт при применении обратного патча {patch_name}!")
+        raise Exception(f"❌ Conflict during reverse patch {patch_name}!")
 
 
 def downgrade_to_version(target_version):
     """
-    Откатываемся к указанной версии используя обратные патчи
+    Downgrading to target version in reverse
     """
     current_version = get_current_version()
 
     if current_version == target_version:
-        console.print(f"[bold yellow]Вы уже используете версию {target_version}[/bold yellow]")
+        console.print(f"[bold yellow]You currently on {target_version}[/bold yellow]")
         return
 
     available_versions = get_available_versions()
     if target_version not in available_versions:
-        console.print(f"[bold red]Версия {target_version} не найдена![/bold red]")
-        console.print(f"Доступные версии: {', '.join(available_versions)}")
+        console.print(f"[bold red]Version {target_version} was not found![/bold red]")
+        console.print(f"Available versions: {', '.join(available_versions)}")
         return
 
     try:
-        # Получаем список патчей и строим цепочку для отката
         patch_names = get_all_patch_names()
         chain = build_downgrade_patch_chain(current_version, target_version, patch_names)
 
         if not chain:
-            console.print("[bold green]Уже на целевой версии[/bold green]")
+            console.print("[bold green]Already on target version[/bold green]")
             return
 
-        console.print(f"[bold blue]Планируемый путь отката: {len(chain)} патчей[/bold blue]")
+        console.print(f"[bold blue]Downgrade patch len: {len(chain)} patches[/bold blue]")
 
-        # Применяем патчи в обратном порядке
         for patch_name, prev_ver in chain:
-            console.print(f"[bold green]⏪ Применение обратного патча: {patch_name}[/bold green]")
+            console.print(f"[bold green]⏪ Applying reverse patch: {patch_name}[/bold green]")
             download_and_apply_reverse_patch(patch_name)
 
-            # Обновляем skeletone.lock после каждого патча
             lock = {
                 "template_repo": SKELETON_REPO,
                 "template_version": prev_ver
@@ -142,44 +137,44 @@ def downgrade_to_version(target_version):
             with open(os.path.join(PROJECT_PATH, "skeletone.lock"), "w") as f:
                 json.dump(lock, f, indent=2)
 
-            console.print(f"[bold green]✅ Откачен до версии {prev_ver}[/bold green]")
+            console.print(f"[bold green]✅ Downgraded to {prev_ver}[/bold green]")
 
-        console.print(f"[bold green]🎉 Успешно откачен до версии {target_version}![/bold green]")
+        console.print(f"[bold green]🎉 Successfully downgraded to {target_version}![/bold green]")
 
     except Exception as e:
-        console.print(f"[bold red]❌ Ошибка при откате: {e}[/bold red]")
-        console.print("[bold yellow]Возможно потребуется ручное разрешение конфликтов[/bold yellow]")
+        console.print(f"[bold red]❌ Error during downgrade: {e}[/bold red]")
+        console.print("[bold yellow]Manual conflict resolving is possible[/bold yellow]")
 
 
 def list_available_versions():
     """
-    Показываем список доступных версий
+    Show available versions list
     """
     try:
         current_version = get_current_version()
         versions = get_available_versions()
 
-        console.print("[bold blue]📋 Доступные версии:[/bold blue]")
+        console.print("[bold blue]📋 Available versions:[/bold blue]")
         for version in versions:
             if version == current_version:
-                console.print(f"  {version} [bold green](текущая)[/bold green]")
+                console.print(f"  {version} [bold green](current)[/bold green]")
             else:
                 console.print(f"  {version}")
 
     except Exception as e:
-        console.print(f"[bold red]Ошибка: {e}[/bold red]")
+        console.print(f"[bold red]Error: {e}[/bold red]")
 
 
 def downgrade_skeletone(target_version=None):
     """
-    Основная функция отката
+    Main downgrade method
     """
     try:
         if target_version is None:
             list_available_versions()
-            target_version = Prompt.ask("\nВведите версию для отката")
+            target_version = Prompt.ask("\nInput version for downgrade")
 
         downgrade_to_version(target_version)
 
     except Exception as e:
-        console.print(f"[bold red]❌ Ошибка при откате: {e}[/bold red]")
+        console.print(f"[bold red]❌ Error during downgrade: {e}[/bold red]")
