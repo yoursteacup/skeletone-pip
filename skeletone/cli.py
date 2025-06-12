@@ -1,6 +1,7 @@
 import click
 from rich.console import Console
 
+from skeletone.downgrade import downgrade_skeletone
 from skeletone.init import init_skeletone
 from skeletone.upgrade import upgrade_skeletone
 

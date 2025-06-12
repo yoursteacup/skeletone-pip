@@ -101,7 +101,7 @@ def download_and_apply_reverse_patch(patch_name):
         raise Exception(f"❌ Конфликт при применении обратного патча {patch_name}!")
 
 
-def downgrade_to_version(target_version, force=False):
+def downgrade_to_version(target_version):
     """
     Откатываемся к указанной версии используя обратные патчи
     """
@@ -116,20 +116,6 @@ def downgrade_to_version(target_version, force=False):
         console.print(f"[bold red]Версия {target_version} не найдена![/bold red]")
         console.print(f"Доступные версии: {', '.join(available_versions)}")
         return
-
-    if not force:
-        console.print(f"[bold yellow]⚠️  ВНИМАНИЕ: Откат с {current_version} на {target_version}[/bold yellow]")
-        console.print("[bold yellow]Это действие откатит изменения с помощью обратных патчей![/bold yellow]")
-
-        confirm = Prompt.ask(
-            "Продолжить? (y/N)",
-            choices=["y", "n", "yes", "no"],
-            default="n"
-        )
-
-        if confirm.lower() not in ["y", "yes"]:
-            console.print("[bold red]Откат отменен[/bold red]")
-            return
 
     try:
         # Получаем список патчей и строим цепочку для отката
@@ -183,7 +169,7 @@ def list_available_versions():
         console.print(f"[bold red]Ошибка: {e}[/bold red]")
 
 
-def downgrade_skeletone(target_version=None, force=False):
+def downgrade_skeletone(target_version=None):
     """
     Основная функция отката
     """
@@ -192,7 +178,7 @@ def downgrade_skeletone(target_version=None, force=False):
             list_available_versions()
             target_version = Prompt.ask("\nВведите версию для отката")
 
-        downgrade_to_version(target_version, force)
+        downgrade_to_version(target_version)
 
     except Exception as e:
         console.print(f"[bold red]❌ Ошибка при откате: {e}[/bold red]")
