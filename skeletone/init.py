@@ -18,7 +18,7 @@ def init_skeletone():
     with tempfile.TemporaryDirectory() as temp_dir:
         console.print(f"[bold green]Cloning template into temp dir: {temp_dir}[/bold green]")
         console.print(f"Cloning to temp_dir={temp_dir}, PROJECT_PATH={PROJECT_PATH}")
-        Repo.clone_from(SKELETON_REPO, temp_dir, multi_options=["--depth=1", "--tags"])
+        Repo.clone_from(SKELETON_REPO, temp_dir, multi_options=["--depth=1", "--tags", "--no-single-branch"])
 
         # Searching latest tag
         repo = Repo(temp_dir)
