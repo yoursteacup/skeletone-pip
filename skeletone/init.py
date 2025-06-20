@@ -45,6 +45,9 @@ def init_skeletone():
         patches = os.path.join(temp_dir, "patches")
         if os.path.exists(patches):
             rmtree(patches)
+        release_script = os.path.join(temp_dir, "release.sh")
+        if os.path.exists(release_script):
+            os.remove(release_script)
 
         console.print("[bold green]Template copied to current directory (overwriting existing files).[/bold green]")
 
